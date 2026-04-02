@@ -15,6 +15,126 @@ pub struct RooParseResult {
 }
 
 impl RooParser {
+    pub fn scan_tasks_directory<P: AsRef<Path>>(
+        dir_path: P,
+    ) -> Result<RooParseResult, Box<dyn std::error::Error>> {
+        let dir_path = dir_path.as_ref();
+        let mut all_events = Vec::new();
+        let mut all_task_ids = HashSet::new();
+        let mut total_count = 0;
+
+        if !dir_path.exists() {
+            return Ok(RooParseResult {
+                events: all_events,
+                task_ids: all_task_ids,
+                record_count: total_count,
+            });
+        }
+
+        // Iterate through task subdirectories
+        for entry in std::fs::read_dir(dir_path)? {
+            let entry = entry?;
+            let task_dir = entry.path();
+
+            if task_dir.is_dir() {
+                // Look for history_item.json in each task directory
+                let history_file = task_dir.join("history_item.json");
+                if history_file.exists() {
+                    if let Ok(event) = Self::parse_history_item(&history_file) {
+                        all_task_ids.insert(event.session_id.clone().unwrap_or_default());
+                        all_events.push(event);
+                        total_count += 1;
+                    }
+                }
+            }
+        }
+
+        Ok(RooParseResult {
+            events: all_events,
+            task_ids: all_task_ids,
+            record_count: total_count,
+        })
+    }
+
+    fn parse_history_item<P: AsRef<Path>>(
+        path: P,
+    ) -> Result<TokenEvent, Box<dyn std::error::Error>> {
+        let path = path.as_ref();
+        let file = File::open(path)?;
+        let reader = BufReader::new(file);
+
+        let content: String = reader.lines().collect::<Result<Vec<_>, _>>()?.join("\n");
+        let json: Value = serde_json::from_str(&content)?;
+
+        let task_id = json
+            .get("id")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string())
+            .unwrap_or_default();
+
+        // Extract tokens from history_item.json format
+        let input_tokens = json
+            .get("tokensIn")
+            .and_then(|v| v.as_i64())
+            .unwrap_or(0);
+
+        let output_tokens = json
+            .get("tokensOut")
+            .and_then(|v| v.as_i64())
+            .unwrap_or(0);
+
+        let cache_read_tokens = json
+            .get("cacheReads")
+            .and_then(|v| v.as_i64())
+            .unwrap_or(0);
+
+        let cache_write_tokens = json
+            .get("cacheWrites")
+            .and_then(|v| v.as_i64())
+            .unwrap_or(0);
+
+        // Skip if no tokens
+        if input_tokens == 0 && output_tokens == 0 {
+            return Err("No tokens in history item".into());
+        }
+
+        // Timestamp is in milliseconds
+        let timestamp_ms = json
+            .get("ts")
+            .and_then(|v| v.as_i64())
+            .unwrap_or_else(|| chrono::Utc::now().timestamp_millis());
+
+        let project_path = json
+            .get("workspace")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string());
+
+        // Mode might contain model info
+        let model = json
+            .get("apiConfigName")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string());
+
+        let source_file = path.to_string_lossy().to_string();
+
+        Ok(TokenEvent {
+            id: None,
+            ide: "roo".to_string(),
+            session_id: Some(task_id.clone()),
+            source_event_id: format!("{}:{}", source_file, task_id),
+            model,
+            input_tokens,
+            output_tokens,
+            cache_read_tokens,
+            cache_write_tokens,
+            timestamp_utc: timestamp_ms / 1000, // Convert ms to seconds
+            project_path,
+            source_file,
+        })
+    }
+
+    // Legacy method kept for backwards compatibility
+    #[allow(dead_code)]
     pub fn parse_task_file<P: AsRef<Path>>(
         path: P,
     ) -> Result<RooParseResult, Box<dyn std::error::Error>> {
@@ -41,13 +161,12 @@ impl RooParser {
         let source_file = path.to_string_lossy().to_string();
 
         if let Some(_token_usage) = json.get("tokenUsage") {
-            if let Some(event) = Self::extract_event(&json, &source_file, &task_id) {
+            if let Some(event) = Self::extract_event_legacy(&json, &source_file, &task_id) {
                 events.push(event);
             }
         }
 
         let record_count = events.len();
-
         Ok(RooParseResult {
             events,
             task_ids,
@@ -55,43 +174,8 @@ impl RooParser {
         })
     }
 
-    pub fn scan_tasks_directory<P: AsRef<Path>>(
-        dir_path: P,
-    ) -> Result<RooParseResult, Box<dyn std::error::Error>> {
-        let dir_path = dir_path.as_ref();
-        let mut all_events = Vec::new();
-        let mut all_task_ids = HashSet::new();
-        let mut total_count = 0;
-
-        if !dir_path.exists() {
-            return Ok(RooParseResult {
-                events: all_events,
-                task_ids: all_task_ids,
-                record_count: total_count,
-            });
-        }
-
-        for entry in std::fs::read_dir(dir_path)? {
-            let entry = entry?;
-            let path = entry.path();
-
-            if path.extension().and_then(|s| s.to_str()) == Some("json") {
-                if let Ok(result) = Self::parse_task_file(&path) {
-                    all_events.extend(result.events);
-                    all_task_ids.extend(result.task_ids);
-                    total_count += result.record_count;
-                }
-            }
-        }
-
-        Ok(RooParseResult {
-            events: all_events,
-            task_ids: all_task_ids,
-            record_count: total_count,
-        })
-    }
-
-    fn extract_event(json: &Value, source_file: &str, task_id: &str) -> Option<TokenEvent> {
+    #[allow(dead_code)]
+    fn extract_event_legacy(json: &Value, source_file: &str, task_id: &str) -> Option<TokenEvent> {
         let token_usage = json.get("tokenUsage")?;
 
         let input_tokens = token_usage
@@ -179,7 +263,7 @@ mod tests {
         }"#;
 
         let json: Value = serde_json::from_str(json_str).unwrap();
-        let event = RooParser::extract_event(&json, "/test/task.json", "task-123");
+        let event = RooParser::extract_event_legacy(&json, "/test/task.json", "task-123");
 
         assert!(event.is_some());
         let event = event.unwrap();
@@ -202,7 +286,7 @@ mod tests {
         }"#;
 
         let json: Value = serde_json::from_str(json_str).unwrap();
-        let event = RooParser::extract_event(&json, "/test/task.json", "task-124");
+        let event = RooParser::extract_event_legacy(&json, "/test/task.json", "task-124");
 
         assert!(event.is_none());
     }

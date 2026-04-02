@@ -360,24 +360,27 @@ pub fn sync_opencode(state: State<AppState>) -> Result<SyncResult, String> {
 #[tauri::command]
 pub fn sync_roo_code(state: State<AppState>) -> Result<SyncResult, String> {
     let home_dir = dirs::home_dir().ok_or("Could not find home directory")?;
-    let tasks_dir =
-        home_dir.join(".config/Code/User/globalStorage/rooveterinaryinc.roo-cline/tasks");
 
-    if !tasks_dir.exists() {
-        let server_dir = home_dir
-            .join(".vscode-server/data/User/globalStorage/rooveterinaryinc.roo-cline/tasks");
-        if server_dir.exists() {
-            return sync_roo_from_dir(&state, &server_dir);
+    // Try multiple paths for different platforms
+    // macOS: ~/Library/Application Support/Code/User/globalStorage/...
+    // Linux: ~/.config/Code/User/globalStorage/...
+    let possible_paths = [
+        home_dir.join("Library/Application Support/Code/User/globalStorage/rooveterinaryinc.roo-cline/tasks"),
+        home_dir.join(".config/Code/User/globalStorage/rooveterinaryinc.roo-cline/tasks"),
+        home_dir.join(".vscode-server/data/User/globalStorage/rooveterinaryinc.roo-cline/tasks"),
+    ];
+
+    for tasks_dir in &possible_paths {
+        if tasks_dir.exists() {
+            return sync_roo_from_dir(&state, tasks_dir);
         }
-
-        return Ok(SyncResult {
-            processed: 0,
-            skipped: 0,
-            errors: vec!["Roo Code tasks directory not found".to_string()],
-        });
     }
 
-    sync_roo_from_dir(&state, &tasks_dir)
+    Ok(SyncResult {
+        processed: 0,
+        skipped: 0,
+        errors: vec!["Roo Code tasks directory not found".to_string()],
+    })
 }
 
 fn sync_roo_from_dir(state: &State<AppState>, tasks_dir: &PathBuf) -> Result<SyncResult, String> {

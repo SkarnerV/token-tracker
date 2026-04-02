@@ -31,48 +31,85 @@ impl OpenCodeParser {
         )?;
 
         let since_clause = since_timestamp
-            .map(|ts| format!("AND timestamp > {}", ts))
+            .map(|ts| format!("AND m.time_created > {}", ts))
             .unwrap_or_default();
 
+        // Query message table and join with session to get project directory
         let mut stmt = conn.prepare(&format!(
-            "SELECT 
-                session_id,
-                model,
-                input_tokens,
-                output_tokens,
-                cache_read_tokens,
-                cache_creation_tokens,
-                timestamp,
-                project_path
-             FROM interactions 
-             WHERE input_tokens IS NOT NULL 
-               AND output_tokens IS NOT NULL
+            "SELECT
+                m.id,
+                m.session_id,
+                m.time_created,
+                m.data,
+                s.directory
+             FROM message m
+             JOIN session s ON m.session_id = s.id
+             WHERE m.data LIKE '%tokens%'
+               AND m.time_created > 0
                {}
-             ORDER BY timestamp",
+             ORDER BY m.time_created",
             since_clause
         ))?;
 
+        let source_file = db_path.to_string_lossy().to_string();
+
         let events: Vec<TokenEvent> = stmt
             .query_map([], |row| {
-                let source_file = db_path.to_string_lossy().to_string();
-                let offset = row.get::<_, i64>(6)?;
+                let message_id: String = row.get(0)?;
+                let session_id: String = row.get(1)?;
+                let time_created: i64 = row.get(2)?;
+                let data: String = row.get(3)?;
+                let directory: String = row.get(4)?;
+
+                // Parse the JSON data field to extract tokens
+                let json: serde_json::Value = serde_json::from_str(&data).unwrap_or(serde_json::Value::Null);
+                let tokens = json.get("tokens");
+
+                let input_tokens = tokens
+                    .and_then(|t| t.get("input"))
+                    .and_then(|v| v.as_i64())
+                    .unwrap_or(0);
+
+                let output_tokens = tokens
+                    .and_then(|t| t.get("output"))
+                    .and_then(|v| v.as_i64())
+                    .unwrap_or(0);
+
+                let cache_read = tokens
+                    .and_then(|t| t.get("cache"))
+                    .and_then(|c| c.get("read"))
+                    .and_then(|v| v.as_i64())
+                    .unwrap_or(0);
+
+                let cache_write = tokens
+                    .and_then(|t| t.get("cache"))
+                    .and_then(|c| c.get("write"))
+                    .and_then(|v| v.as_i64())
+                    .unwrap_or(0);
+
+                let model = json
+                    .get("modelID")
+                    .and_then(|v| v.as_str())
+                    .map(|s| s.to_string());
 
                 Ok(TokenEvent {
                     id: None,
                     ide: "opencode".to_string(),
-                    session_id: row.get(0)?,
-                    source_event_id: format!("{}:{}", source_file, offset),
-                    model: row.get(1)?,
-                    input_tokens: row.get(2)?,
-                    output_tokens: row.get(3)?,
-                    cache_read_tokens: row.get::<_, Option<i64>>(4)?.unwrap_or(0),
-                    cache_write_tokens: row.get::<_, Option<i64>>(5)?.unwrap_or(0),
-                    timestamp_utc: row.get(6)?,
-                    project_path: row.get(7)?,
-                    source_file,
+                    session_id: Some(session_id),
+                    source_event_id: format!("{}:{}", source_file, message_id),
+                    model,
+                    input_tokens,
+                    output_tokens,
+                    cache_read_tokens: cache_read,
+                    cache_write_tokens: cache_write,
+                    timestamp_utc: time_created / 1000, // Convert ms to seconds
+                    project_path: Some(directory),
+                    source_file: source_file.clone(),
                 })
             })?
-            .collect::<Result<Vec<_>, _>>()?;
+            .filter_map(|result| result.ok())
+            .filter(|e| e.input_tokens > 0 || e.output_tokens > 0)
+            .collect();
 
         let record_count = events.len();
 
@@ -152,8 +189,6 @@ impl OpenCodeParser {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::io::Write;
-    use tempfile::NamedTempFile;
 
     #[test]
     fn test_parse_legacy_event() {

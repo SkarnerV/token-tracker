@@ -98,12 +98,15 @@ impl ClaudeParser {
             .and_then(|v| v.as_str())
             .map(|s| s.to_string());
 
+        // Cache field names vary: cache_read_input_tokens or cache_read_tokens
         let cache_read_tokens = usage
-            .get("cache_read_tokens")
+            .get("cache_read_input_tokens")
+            .or_else(|| usage.get("cache_read_tokens"))
             .and_then(|v| v.as_i64())
             .unwrap_or(0);
         let cache_write_tokens = usage
-            .get("cache_creation_tokens")
+            .get("cache_creation_input_tokens")
+            .or_else(|| usage.get("cache_creation_tokens"))
             .or_else(|| usage.get("cache_write_tokens"))
             .and_then(|v| v.as_i64())
             .unwrap_or(0);
@@ -142,8 +145,8 @@ mod tests {
             "usage": {
                 "input_tokens": 1500,
                 "output_tokens": 800,
-                "cache_read_tokens": 2000,
-                "cache_creation_tokens": 500
+                "cache_read_input_tokens": 2000,
+                "cache_creation_input_tokens": 500
             }
         }"#;
 
