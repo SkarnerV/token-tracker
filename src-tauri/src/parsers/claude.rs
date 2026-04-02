@@ -75,7 +75,10 @@ impl ClaudeParser {
     }
 
     fn extract_event(json: &Value, source_file: &str, offset: u64) -> Option<TokenEvent> {
-        let usage = json.get("usage")?;
+        // Usage can be at top-level or nested inside "message"
+        let usage = json
+            .get("usage")
+            .or_else(|| json.get("message").and_then(|m| m.get("usage")))?;
         let input_tokens = usage.get("input_tokens")?.as_i64()?;
         let output_tokens = usage.get("output_tokens")?.as_i64()?;
 
