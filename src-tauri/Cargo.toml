@@ -1,0 +1,26 @@
+[package]
+name = "token-tracker"
+version = "0.1.0"
+description = "Multi-IDE token usage tracker"
+authors = ["Your Name"]
+license = "MIT"
+repository = ""
+edition = "2021"
+rust-version = "1.70"
+
+[build-dependencies]
+tauri-build = { version = "1.5", features = [] }
+
+[dependencies]
+tauri = { version = "1.5", features = [ "fs-read-file", "path-all", "shell-open"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+rusqlite = { version = "0.30", features = ["bundled", "chrono"] }
+chrono = { version = "0.4", features = ["serde"] }
+dirs = "5.0"
+notify = "6.1"
+tokio = { version = "1.0", features = ["full"] }
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
