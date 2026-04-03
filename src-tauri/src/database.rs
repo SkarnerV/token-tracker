@@ -246,40 +246,82 @@ impl Database {
         &self,
         start_ts: i64,
         end_ts: i64,
-        ide_filter: Option<&str>,
+        ide_filter: Option<Vec<String>>,
     ) -> Result<Vec<TokenEvent>> {
-        let sql = if ide_filter.is_some() {
-            "SELECT ide, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, timestamp_utc
-             FROM token_events 
-             WHERE timestamp_utc >= ?1 AND timestamp_utc <= ?2 AND ide = ?3
-             ORDER BY timestamp_utc"
+        let sql = if let Some(ides) = &ide_filter {
+            if ides.is_empty() {
+                "SELECT ide, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, timestamp_utc
+                 FROM token_events 
+                 WHERE timestamp_utc >= ?1 AND timestamp_utc <= ?2
+                 ORDER BY timestamp_utc".to_string()
+            } else {
+                let placeholders: Vec<String> = ides
+                    .iter()
+                    .enumerate()
+                    .map(|(i, _)| format!("?{}", i + 3))
+                    .collect();
+                let in_clause = placeholders.join(", ");
+                format!("SELECT ide, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, timestamp_utc
+                 FROM token_events 
+                 WHERE timestamp_utc >= ?1 AND timestamp_utc <= ?2 AND ide IN ({})
+                 ORDER BY timestamp_utc", in_clause)
+            }
         } else {
             "SELECT ide, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, timestamp_utc
              FROM token_events 
              WHERE timestamp_utc >= ?1 AND timestamp_utc <= ?2
-             ORDER BY timestamp_utc"
+             ORDER BY timestamp_utc".to_string()
         };
 
-        let mut stmt = self.conn.prepare(sql)?;
+        let mut stmt = self.conn.prepare(&sql)?;
 
-        let rows = if let Some(ide) = ide_filter {
-            stmt.query_map(params![start_ts, end_ts, ide], |row| {
-                Ok(TokenEvent {
-                    id: None,
-                    ide: row.get(0)?,
-                    session_id: None,
-                    source_event_id: String::new(),
-                    model: None,
-                    input_tokens: row.get(1)?,
-                    output_tokens: row.get(2)?,
-                    cache_read_tokens: row.get(3)?,
-                    cache_write_tokens: row.get(4)?,
-                    timestamp_utc: row.get(5)?,
-                    project_path: None,
-                    source_file: String::new(),
-                })
-            })?
-            .collect::<Result<Vec<_>>>()?
+        let rows = if let Some(ides) = ide_filter {
+            if ides.is_empty() {
+                stmt.query_map(params![start_ts, end_ts], |row| {
+                    Ok(TokenEvent {
+                        id: None,
+                        ide: row.get(0)?,
+                        session_id: None,
+                        source_event_id: String::new(),
+                        model: None,
+                        input_tokens: row.get(1)?,
+                        output_tokens: row.get(2)?,
+                        cache_read_tokens: row.get(3)?,
+                        cache_write_tokens: row.get(4)?,
+                        timestamp_utc: row.get(5)?,
+                        project_path: None,
+                        source_file: String::new(),
+                    })
+                })?
+                .collect::<Result<Vec<_>>>()?
+            } else {
+                // Build dynamic params: start_ts, end_ts, then each IDE
+                let mut param_values: Vec<Box<dyn rusqlite::ToSql>> =
+                    vec![Box::new(start_ts), Box::new(end_ts)];
+                for ide in ides {
+                    param_values.push(Box::new(ide));
+                }
+                let params_refs: Vec<&dyn rusqlite::ToSql> =
+                    param_values.iter().map(|p| p.as_ref()).collect();
+
+                stmt.query_map(params_refs.as_slice(), |row| {
+                    Ok(TokenEvent {
+                        id: None,
+                        ide: row.get(0)?,
+                        session_id: None,
+                        source_event_id: String::new(),
+                        model: None,
+                        input_tokens: row.get(1)?,
+                        output_tokens: row.get(2)?,
+                        cache_read_tokens: row.get(3)?,
+                        cache_write_tokens: row.get(4)?,
+                        timestamp_utc: row.get(5)?,
+                        project_path: None,
+                        source_file: String::new(),
+                    })
+                })?
+                .collect::<Result<Vec<_>>>()?
+            }
         } else {
             stmt.query_map(params![start_ts, end_ts], |row| {
                 Ok(TokenEvent {
@@ -307,35 +349,74 @@ impl Database {
         &self,
         start_date: &str,
         end_date: &str,
-        ide_filter: Option<&str>,
+        ide_filter: Option<Vec<String>>,
     ) -> Result<Vec<DailyStats>> {
-        let sql = if ide_filter.is_some() {
-            "SELECT date, ide, total_input, total_output, total_cache_read, total_cache_write, session_count
-             FROM daily_stats 
-             WHERE date >= ?1 AND date <= ?2 AND ide = ?3
-             ORDER BY date"
+        let sql = if let Some(ides) = &ide_filter {
+            if ides.is_empty() {
+                "SELECT date, ide, total_input, total_output, total_cache_read, total_cache_write, session_count
+                 FROM daily_stats 
+                 WHERE date >= ?1 AND date <= ?2
+                 ORDER BY date".to_string()
+            } else {
+                let placeholders: Vec<String> = ides
+                    .iter()
+                    .enumerate()
+                    .map(|(i, _)| format!("?{}", i + 3))
+                    .collect();
+                let in_clause = placeholders.join(", ");
+                format!("SELECT date, ide, total_input, total_output, total_cache_read, total_cache_write, session_count
+                 FROM daily_stats 
+                 WHERE date >= ?1 AND date <= ?2 AND ide IN ({})
+                 ORDER BY date", in_clause)
+            }
         } else {
             "SELECT date, ide, total_input, total_output, total_cache_read, total_cache_write, session_count
              FROM daily_stats 
              WHERE date >= ?1 AND date <= ?2
-             ORDER BY date"
+             ORDER BY date".to_string()
         };
 
-        let mut stmt = self.conn.prepare(sql)?;
+        let mut stmt = self.conn.prepare(&sql)?;
 
-        let rows = if let Some(ide) = ide_filter {
-            stmt.query_map(params![start_date, end_date, ide], |row| {
-                Ok(DailyStats {
-                    date: row.get(0)?,
-                    ide: row.get(1)?,
-                    total_input: row.get(2)?,
-                    total_output: row.get(3)?,
-                    total_cache_read: row.get(4)?,
-                    total_cache_write: row.get(5)?,
-                    session_count: row.get(6)?,
-                })
-            })?
-            .collect::<Result<Vec<_>>>()?
+        let rows = if let Some(ides) = ide_filter {
+            if ides.is_empty() {
+                stmt.query_map(params![start_date, end_date], |row| {
+                    Ok(DailyStats {
+                        date: row.get(0)?,
+                        ide: row.get(1)?,
+                        total_input: row.get(2)?,
+                        total_output: row.get(3)?,
+                        total_cache_read: row.get(4)?,
+                        total_cache_write: row.get(5)?,
+                        session_count: row.get(6)?,
+                    })
+                })?
+                .collect::<Result<Vec<_>>>()?
+            } else {
+                // Build dynamic params: start_date, end_date, then each IDE
+                let mut param_values: Vec<Box<dyn rusqlite::ToSql>> = vec![
+                    Box::new(start_date.to_string()),
+                    Box::new(end_date.to_string()),
+                ];
+                for ide in ides {
+                    param_values.push(Box::new(ide));
+                }
+                let params_refs: Vec<&dyn rusqlite::ToSql> =
+                    param_values.iter().map(|p| p.as_ref()).collect();
+
+                stmt.query_map(params_refs.as_slice(), |row| {
+                    Ok(DailyStats {
+                        date: row.get(0)?,
+                        ide: row.get(1)?,
+                        total_input: row.get(2)?,
+                        total_output: row.get(3)?,
+                        total_cache_read: row.get(4)?,
+                        total_cache_write: row.get(5)?,
+                        session_count: row.get(6)?,
+                    })
+                })?
+                .collect::<Result<Vec<_>>>()?
+            }
         } else {
             stmt.query_map(params![start_date, end_date], |row| {
                 Ok(DailyStats {

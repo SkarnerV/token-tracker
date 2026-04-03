@@ -61,11 +61,11 @@ pub fn get_stats(
     state: State<AppState>,
     start_ts: i64,
     end_ts: i64,
-    ide_filter: Option<String>,
+    ide_filter: Option<Vec<String>>,
 ) -> Result<StatsResponse, String> {
     let db = state.db.lock().map_err(|e| e.to_string())?;
     let events = db
-        .get_stats_for_range(start_ts, end_ts, ide_filter.as_deref())
+        .get_stats_for_range(start_ts, end_ts, ide_filter)
         .map_err(|e: rusqlite::Error| e.to_string())?;
 
     let mut total_input = 0i64;
@@ -141,11 +141,11 @@ pub fn get_contribution_graph(
     state: State<AppState>,
     start_date: String,
     end_date: String,
-    ide_filter: Option<String>,
+    ide_filter: Option<Vec<String>>,
 ) -> Result<ContributionGraphResponse, String> {
     let db = state.db.lock().map_err(|e| e.to_string())?;
     let daily_stats = db
-        .get_daily_stats(&start_date, &end_date, ide_filter.as_deref())
+        .get_daily_stats(&start_date, &end_date, ide_filter)
         .map_err(|e: rusqlite::Error| e.to_string())?;
 
     let max_count = daily_stats
@@ -365,7 +365,9 @@ pub fn sync_roo_code(state: State<AppState>) -> Result<SyncResult, String> {
     // macOS: ~/Library/Application Support/Code/User/globalStorage/...
     // Linux: ~/.config/Code/User/globalStorage/...
     let possible_paths = [
-        home_dir.join("Library/Application Support/Code/User/globalStorage/rooveterinaryinc.roo-cline/tasks"),
+        home_dir.join(
+            "Library/Application Support/Code/User/globalStorage/rooveterinaryinc.roo-cline/tasks",
+        ),
         home_dir.join(".config/Code/User/globalStorage/rooveterinaryinc.roo-cline/tasks"),
         home_dir.join(".vscode-server/data/User/globalStorage/rooveterinaryinc.roo-cline/tasks"),
     ];

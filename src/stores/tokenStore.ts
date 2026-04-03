@@ -55,7 +55,8 @@ export const useTokenStore = create<TokenState>((set, get) => ({
 
     try {
       const range = getTimeRange(selectedRange);
-      const ideFilter = selectedIdes.length === 3 ? undefined : selectedIdes[0];
+      // Pass all selected IDEs, or undefined if all 3 are selected (backend returns all)
+      const ideFilter = selectedIdes.length === 3 ? undefined : selectedIdes;
 
       const stats = await invoke<StatsResponse>('get_stats', {
         startTs: range.startTs,
@@ -76,7 +77,8 @@ export const useTokenStore = create<TokenState>((set, get) => ({
 
     try {
       const range = getContributionGraphRange();
-      const ideFilter = selectedIdes.length === 3 ? undefined : selectedIdes[0];
+      // Pass all selected IDEs, or undefined if all 3 are selected (backend returns all)
+      const ideFilter = selectedIdes.length === 3 ? undefined : selectedIdes;
 
       const response = await invoke<{ data: ContributionDay[] }>('get_contribution_graph', {
         startDate: range.startDate,
