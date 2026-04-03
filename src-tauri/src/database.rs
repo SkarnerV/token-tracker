@@ -250,7 +250,7 @@ impl Database {
     ) -> Result<Vec<TokenEvent>> {
         let sql = if let Some(ides) = &ide_filter {
             if ides.is_empty() {
-                "SELECT ide, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, timestamp_utc
+                "SELECT ide, session_id, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, timestamp_utc
                  FROM token_events 
                  WHERE timestamp_utc >= ?1 AND timestamp_utc <= ?2
                  ORDER BY timestamp_utc".to_string()
@@ -261,13 +261,13 @@ impl Database {
                     .map(|(i, _)| format!("?{}", i + 3))
                     .collect();
                 let in_clause = placeholders.join(", ");
-                format!("SELECT ide, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, timestamp_utc
+                format!("SELECT ide, session_id, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, timestamp_utc
                  FROM token_events 
                  WHERE timestamp_utc >= ?1 AND timestamp_utc <= ?2 AND ide IN ({})
                  ORDER BY timestamp_utc", in_clause)
             }
         } else {
-            "SELECT ide, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, timestamp_utc
+            "SELECT ide, session_id, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, timestamp_utc
              FROM token_events 
              WHERE timestamp_utc >= ?1 AND timestamp_utc <= ?2
              ORDER BY timestamp_utc".to_string()
@@ -281,14 +281,14 @@ impl Database {
                     Ok(TokenEvent {
                         id: None,
                         ide: row.get(0)?,
-                        session_id: None,
+                        session_id: row.get::<_, Option<String>>(1)?,
                         source_event_id: String::new(),
                         model: None,
-                        input_tokens: row.get(1)?,
-                        output_tokens: row.get(2)?,
-                        cache_read_tokens: row.get(3)?,
-                        cache_write_tokens: row.get(4)?,
-                        timestamp_utc: row.get(5)?,
+                        input_tokens: row.get(2)?,
+                        output_tokens: row.get(3)?,
+                        cache_read_tokens: row.get(4)?,
+                        cache_write_tokens: row.get(5)?,
+                        timestamp_utc: row.get(6)?,
                         project_path: None,
                         source_file: String::new(),
                     })
@@ -308,14 +308,14 @@ impl Database {
                     Ok(TokenEvent {
                         id: None,
                         ide: row.get(0)?,
-                        session_id: None,
+                        session_id: row.get::<_, Option<String>>(1)?,
                         source_event_id: String::new(),
                         model: None,
-                        input_tokens: row.get(1)?,
-                        output_tokens: row.get(2)?,
-                        cache_read_tokens: row.get(3)?,
-                        cache_write_tokens: row.get(4)?,
-                        timestamp_utc: row.get(5)?,
+                        input_tokens: row.get(2)?,
+                        output_tokens: row.get(3)?,
+                        cache_read_tokens: row.get(4)?,
+                        cache_write_tokens: row.get(5)?,
+                        timestamp_utc: row.get(6)?,
                         project_path: None,
                         source_file: String::new(),
                     })
@@ -327,14 +327,14 @@ impl Database {
                 Ok(TokenEvent {
                     id: None,
                     ide: row.get(0)?,
-                    session_id: None,
+                    session_id: row.get::<_, Option<String>>(1)?,
                     source_event_id: String::new(),
                     model: None,
-                    input_tokens: row.get(1)?,
-                    output_tokens: row.get(2)?,
-                    cache_read_tokens: row.get(3)?,
-                    cache_write_tokens: row.get(4)?,
-                    timestamp_utc: row.get(5)?,
+                    input_tokens: row.get(2)?,
+                    output_tokens: row.get(3)?,
+                    cache_read_tokens: row.get(4)?,
+                    cache_write_tokens: row.get(5)?,
+                    timestamp_utc: row.get(6)?,
                     project_path: None,
                     source_file: String::new(),
                 })
