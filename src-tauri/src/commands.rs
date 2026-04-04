@@ -279,7 +279,7 @@ pub fn sync_opencode(state: State<AppState>) -> Result<SyncResult, String> {
                     for event in &events {
                         let inserted = {
                             let db = state.db.lock().map_err(|e| e.to_string())?;
-                            db.insert_or_ignore_event(&event)
+                            db.insert_or_ignore_event(event)
                                 .map_err(|e: rusqlite::Error| e.to_string())?
                         };
 

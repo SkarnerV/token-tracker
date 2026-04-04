@@ -62,7 +62,8 @@ impl OpenCodeParser {
                 let directory: String = row.get(4)?;
 
                 // Parse the JSON data field to extract tokens
-                let json: serde_json::Value = serde_json::from_str(&data).unwrap_or(serde_json::Value::Null);
+                let json: serde_json::Value =
+                    serde_json::from_str(&data).unwrap_or(serde_json::Value::Null);
                 let tokens = json.get("tokens");
 
                 let input_tokens = tokens

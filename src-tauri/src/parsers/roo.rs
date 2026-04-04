@@ -8,6 +8,7 @@ use std::path::Path;
 pub struct RooParser;
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct RooParseResult {
     pub events: Vec<TokenEvent>,
     pub task_ids: HashSet<String>,
@@ -73,20 +74,11 @@ impl RooParser {
             .unwrap_or_default();
 
         // Extract tokens from history_item.json format
-        let input_tokens = json
-            .get("tokensIn")
-            .and_then(|v| v.as_i64())
-            .unwrap_or(0);
+        let input_tokens = json.get("tokensIn").and_then(|v| v.as_i64()).unwrap_or(0);
 
-        let output_tokens = json
-            .get("tokensOut")
-            .and_then(|v| v.as_i64())
-            .unwrap_or(0);
+        let output_tokens = json.get("tokensOut").and_then(|v| v.as_i64()).unwrap_or(0);
 
-        let cache_read_tokens = json
-            .get("cacheReads")
-            .and_then(|v| v.as_i64())
-            .unwrap_or(0);
+        let cache_read_tokens = json.get("cacheReads").and_then(|v| v.as_i64()).unwrap_or(0);
 
         let cache_write_tokens = json
             .get("cacheWrites")
