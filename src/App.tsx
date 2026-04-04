@@ -9,39 +9,34 @@ function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-950 text-gray-900 dark:text-white">
-      <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg" />
-              <h1 className="text-xl font-bold">Token Tracker</h1>
-            </div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              Track your AI coding assistant usage
-            </div>
-          </div>
+    <div className="min-h-screen bg-industrial-black text-industrial-100">
+      <header className="bg-industrial-700 h-20 flex items-center px-8">
+        <div className="flex items-center gap-5 w-full">
+          <div className="w-12 h-12 bg-industrial-100" />
+          <h1 className="text-3xl font-bold font-sans tracking-wide">
+            TOKEN TRACKER
+          </h1>
+          <span className="ml-auto text-sm font-mono text-industrial-400">
+            v1.0.0
+          </span>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-3 space-y-6">
-            <StatsCards />
-            <ActivityGraph />
-          </div>
-          <div className="lg:col-span-1">
-            <IDESelector />
-          </div>
+      <main className="flex gap-6 p-6">
+        <div className="flex-1 flex flex-col gap-6">
+          <StatsCards />
+          <ActivityGraph />
+        </div>
+
+        <div className="w-[280px]">
+          <IDESelector />
         </div>
       </main>
 
-      <footer className="border-t border-gray-200 dark:border-gray-800 mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
-            Token Tracker • Tracks Claude Code, OpenCode, and Roo Code usage
-          </p>
-        </div>
+      <footer className="bg-industrial-700 h-12 flex items-center px-8">
+        <p className="text-xs font-mono text-industrial-600 text-center w-full">
+          TOKEN TRACKER | SYSTEM MONITOR | v1.0.0
+        </p>
       </footer>
     </div>
   );
