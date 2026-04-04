@@ -55,6 +55,9 @@ jobs:
       - name: Check formatting
         run: cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
 
+      - name: Create dummy dist directory
+        run: mkdir -p dist
+
       - name: Run clippy
         run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --all-features -- -D warnings 2>&1
 
@@ -97,6 +100,9 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: './src-tauri -> target'
+
+      - name: Create dummy dist directory
+        run: mkdir -p dist
 
       - name: Run tests
         run: cargo test --manifest-path src-tauri/Cargo.toml --verbose
@@ -165,7 +171,7 @@ jobs:
         if: matrix.os == 'ubuntu-22.04'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev libssl-dev libdbus-1-dev libsoup2.4-dev patchelf
+          sudo apt-get install -y libwebkit2gtk-4.0-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev libssl-dev libdbus-1-dev libsoup2.4-dev patchelf
 
       - name: Install frontend dependencies
         run: pnpm install
