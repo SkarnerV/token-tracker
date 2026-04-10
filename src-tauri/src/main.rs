@@ -1,3 +1,5 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
 use crate::commands::{
     get_contribution_graph, get_stats, rebuild_aggregates, sync_claude_code, sync_opencode,
     sync_roo_code, AppState,
