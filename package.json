@@ -16,7 +16,11 @@
     "test:coverage": "vitest run --coverage",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build"
+    "tauri:build": "tauri build",
+    "version:bump": "node scripts/version-bump.cjs",
+    "version:verify": "node scripts/version-verify.cjs",
+    "release:check": "node scripts/release-check.cjs",
+    "release:prepare": "node scripts/release-prepare.cjs"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.0.0",
