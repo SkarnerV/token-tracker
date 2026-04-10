@@ -8,6 +8,7 @@ use std::path::Path;
 pub struct RooParser;
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct RooParseResult {
     pub events: Vec<TokenEvent>,
     pub task_ids: HashSet<String>,

@@ -8,18 +8,25 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
+        industrial: {
+          black: '#000000',
+          900: '#0a0a0a',
+          800: '#0f0f0f',
+          700: '#1a1a1a',
+          600: '#333333',
+          500: '#4a4a4a',
+          400: '#666666',
+          300: '#999999',
+          200: '#cccccc',
+          100: '#ffffff',
         },
+        accent: {
+          cyan: '#00FFFF',
+        },
+      },
+      fontFamily: {
+        sans: ['"IBM Plex Sans"', 'system-ui', 'sans-serif'],
+        mono: ['"IBM Plex Mono"', 'monospace'],
       },
     },
   },

@@ -1,128 +1,213 @@
-import { useEffect, useMemo } from 'react';
-import { AlertCircle } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTokenStore } from '../stores/tokenStore';
-import { IDE_COLORS, IDE_LABELS } from '../types';
 import { formatTokenCount } from '../lib/timeRanges';
 
+const MONTH_ABBREVIATIONS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const DAY_LABELS = ['', 'Mon', '', 'Wed', '', 'Fri', ''];
+
 const LEVEL_COLORS = [
-  'bg-gray-100 dark:bg-gray-800',
-  'bg-green-300 dark:bg-green-900',
-  'bg-green-400 dark:bg-green-700',
-  'bg-green-500 dark:bg-green-600',
-  'bg-green-600 dark:bg-green-500',
+  'bg-industrial-700',
+  'bg-industrial-600',
+  'bg-industrial-400',
+  'bg-industrial-200',
+  'bg-industrial-100',
 ];
 
+interface TooltipData {
+  date: string;
+  count: number;
+  x: number;
+  y: number;
+}
+
+interface WeekData {
+  days: ({ date: string; count: number; level: number } | null)[];
+  year: number;
+  month: number;
+}
+
 export function ActivityGraph() {
-  const { contributionData, isLoading, error, fetchContributionGraph, selectedIdes } = useTokenStore();
+  const { contributionData, isLoading, fetchContributionGraph, selectedIdes } = useTokenStore();
+  const [tooltip, setTooltip] = useState<TooltipData | null>(null);
 
   useEffect(() => {
     fetchContributionGraph();
   }, [fetchContributionGraph, selectedIdes]);
 
-  const weeks = useMemo(() => {
-    const grouped: { date: string; count: number; level: number }[][] = [];
-    let currentWeek: { date: string; count: number; level: number }[] = [];
+  const { weeks, monthLabels } = useMemo(() => {
+    const grouped: WeekData[] = [];
+    let currentWeek: ({ date: string; count: number; level: number } | null)[] = [];
 
     contributionData.forEach((day, index) => {
       const date = new Date(day.date);
       const dayOfWeek = date.getDay();
 
       if (dayOfWeek === 0 && currentWeek.length > 0) {
-        grouped.push(currentWeek);
+        const weekDate = new Date(currentWeek.find(d => d)?.date || day.date);
+        grouped.push({
+          days: currentWeek,
+          year: weekDate.getFullYear(),
+          month: weekDate.getMonth(),
+        });
         currentWeek = [];
       }
 
-      currentWeek.push(day);
+      currentWeek[dayOfWeek] = day;
 
       if (index === contributionData.length - 1 && currentWeek.length > 0) {
-        grouped.push(currentWeek);
+        const weekDate = new Date(currentWeek.find(d => d)?.date || day.date);
+        grouped.push({
+          days: currentWeek,
+          year: weekDate.getFullYear(),
+          month: weekDate.getMonth(),
+        });
       }
     });
 
-    return grouped;
+    const labels: { month: string; position: number }[] = [];
+    let lastMonth = -1;
+    let lastYear = -1;
+
+    grouped.forEach((week, index) => {
+      const firstDayOfWeek = week.days.find(d => d);
+      if (!firstDayOfWeek) return;
+
+      const date = new Date(firstDayOfWeek.date);
+      const month = date.getMonth();
+      const year = date.getFullYear();
+
+      if (month !== lastMonth || year !== lastYear) {
+        labels.push({
+          month: MONTH_ABBREVIATIONS[month],
+          position: index,
+        });
+        lastMonth = month;
+        lastYear = year;
+      }
+    });
+
+    return { weeks: grouped, monthLabels: labels };
   }, [contributionData]);
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-32">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white" />
+      <div className="flex-1 bg-industrial-800 p-5 flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-2 border-industrial-100" />
       </div>
     );
   }
 
-  if (error) {
+  if (weeks.length === 0) {
     return (
-      <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6">
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
-          <div className="flex-1">
-            <h3 className="text-sm font-medium text-red-800 dark:text-red-200">Failed to load activity graph</h3>
-            <p className="text-sm text-red-600 dark:text-red-400 mt-1">{error}</p>
-            <button
-              onClick={() => fetchContributionGraph()}
-              className="mt-3 text-sm text-red-700 dark:text-red-300 hover:text-red-800 dark:hover:text-red-200 font-medium underline"
-            >
-              Try again
-            </button>
-          </div>
-        </div>
+      <div className="flex-1 bg-industrial-800 p-5 flex items-center justify-center">
+        <p className="font-mono text-industrial-400">No activity data available</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6">
-      <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
-        Token Activity
-      </h3>
-      
-      <div className="overflow-x-auto">
-        <div className="flex gap-1 min-w-max">
-          {weeks.map((week, weekIndex) => (
-            <div key={weekIndex} className="flex flex-col gap-1">
-              {Array.from({ length: 7 }).map((_, dayIndex) => {
-                const day = week[dayIndex];
-                if (!day) return <div key={dayIndex} className="w-3 h-3" />;
-
-                const level = Math.min(4, Math.max(0, day.level));
-                const colorClass = LEVEL_COLORS[level];
-
-                return (
-                  <div
-                    key={dayIndex}
-                    className={`w-3 h-3 rounded-sm ${colorClass} hover:ring-2 hover:ring-gray-400 dark:hover:ring-gray-500 transition-all cursor-pointer`}
-                    title={`${day.date}: ${formatTokenCount(day.count)} tokens`}
-                  />
-                );
-              })}
-            </div>
-          ))}
-        </div>
+    <div className="flex-1 bg-industrial-800 p-5 flex flex-col gap-5">
+      <div className="flex items-center gap-4 h-10">
+        <h3 className="text-base font-bold font-sans tracking-wide text-industrial-100">
+          ACTIVITY MATRIX
+        </h3>
+        <div className="flex-1 h-0.5 bg-industrial-600" />
       </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm text-gray-600 dark:text-gray-400">
-        <span>Less</span>
-        <div className="flex gap-1">
-          {LEVEL_COLORS.map((color, i) => (
-            <div key={i} className={`w-3 h-3 rounded-sm ${color}`} />
-          ))}
-        </div>
-        <span>More</span>
-      </div>
-
-      <div className="mt-4 flex gap-4">
-        {selectedIdes.map((ide) => (
-          <div key={ide} className="flex items-center gap-2">
-            <div
-              className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: IDE_COLORS[ide] }}
-            />
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              {IDE_LABELS[ide]}
-            </span>
+      <div className="flex flex-col gap-4">
+        <div className="flex gap-2 relative h-5">
+          <div className="w-6" />
+          <div className="flex-1 relative">
+            {monthLabels.map((label, index) => {
+              const nextLabel = monthLabels[index + 1];
+              const width = nextLabel
+                ? (nextLabel.position - label.position) * 14
+                : (weeks.length - label.position) * 14;
+              return (
+                <span
+                  key={`${label.month}-${label.position}`}
+                  className="absolute text-xs font-mono text-industrial-400"
+                  style={{
+                    left: label.position * 14,
+                    width: Math.max(width, 28),
+                  }}
+                >
+                  {label.month}
+                </span>
+              );
+            })}
           </div>
-        ))}
+        </div>
+
+        <div className="flex gap-2 relative">
+          <div className="flex flex-col gap-0.5">
+            {DAY_LABELS.map((day, i) => (
+              <div key={i} className="h-3 flex items-center">
+                <span className="text-xs font-mono text-industrial-400 w-6">
+                  {day}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex gap-0.5 flex-1 overflow-x-auto">
+            {weeks.map((week, weekIndex) => (
+              <div key={weekIndex} className="flex flex-col gap-0.5">
+                {Array.from({ length: 7 }).map((_, dayIndex) => {
+                  const day = week.days[dayIndex];
+                  if (!day) return <div key={dayIndex} className="w-3 h-3" />;
+
+                  const level = Math.min(4, Math.max(0, day.level));
+                  const colorClass = LEVEL_COLORS[level];
+
+                  return (
+                    <div
+                      key={dayIndex}
+                      className={`w-3 h-3 ${colorClass} cursor-pointer hover:opacity-80 transition-opacity relative`}
+                      onMouseEnter={(e) => {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        setTooltip({
+                          date: day.date,
+                          count: day.count,
+                          x: rect.left + rect.width / 2,
+                          y: rect.top,
+                        });
+                      }}
+                      onMouseLeave={() => setTooltip(null)}
+                    />
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-2">
+          <span className="text-xs font-mono text-industrial-400">LESS</span>
+          {LEVEL_COLORS.map((color, i) => (
+            <div key={i} className={`w-3 h-3 ${color}`} />
+          ))}
+          <span className="text-xs font-mono text-industrial-100">MORE</span>
+        </div>
+
+        <p className="text-xs font-mono text-industrial-500 text-center">
+          Hover over cells to view daily consumption data
+        </p>
       </div>
+
+      {tooltip && (
+        <div
+          className="fixed z-50 bg-industrial-700 border border-industrial-600 px-3 py-2 text-xs font-mono pointer-events-none"
+          style={{
+            left: tooltip.x,
+            top: tooltip.y - 40,
+            transform: 'translateX(-50%)',
+          }}
+        >
+          <div className="text-industrial-100 font-bold">{tooltip.date}</div>
+          <div className="text-accent-cyan">{formatTokenCount(tooltip.count)} tokens</div>
+        </div>
+      )}
     </div>
   );
 }
