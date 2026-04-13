@@ -1,6 +1,6 @@
 {
   "productName": "Token Tracker",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "identifier": "com.tokentracker.desktop",
   "build": {
     "beforeBuildCommand": "npm run build",
