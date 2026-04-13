@@ -115,15 +115,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          projectPath: ./src-tauri
           tagName: ${{ github.ref_name }}
           releaseName: 'Token Tracker ${{ github.ref_name }}'
           releaseBody: |
             ## What's Changed
-            
+
             See [CHANGELOG.md](./CHANGELOG.md) for details.
-            
+
             ## Downloads
-            
+
             | Platform | Architecture | Download |
             |----------|-------------|----------|
             | macOS | Intel (x64) | `.dmg` / `.app` |
