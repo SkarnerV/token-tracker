@@ -121,7 +121,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          projectPath: ./src-tauri
           tagName: ${{ github.ref_name }}
           releaseName: 'Token Tracker ${{ github.ref_name }}'
           releaseBody: |
