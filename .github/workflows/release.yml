@@ -110,7 +110,7 @@ jobs:
       - name: Install Windows dependencies
         if: matrix.os == 'windows-latest'
         run: |
-          choco install nsi
+          choco install nsis
           choco install wixtoolset
 
       - name: Install frontend dependencies
