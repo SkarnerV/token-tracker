@@ -7,7 +7,7 @@ After upgrading from Tauri v1 to v2, the GitHub release pipeline failed with:
 No artifacts were found.
 ```
 
-This occurred across 7 consecutive release attempts (v0.1.1 through v0.1.7), while the earlier v0.1.0 release (Tauri v1) succeeded.
+This occurred during initial release attempts after the Tauri v2 upgrade, while the earlier v0.1.0 release (Tauri v1) succeeded.
 
 ## Root Cause
 
