@@ -34,45 +34,81 @@ export function ActivityGraph() {
     fetchContributionGraph();
   }, [fetchContributionGraph, selectedIdes]);
 
+  // Format date as YYYY-MM-DD in local timezone (not UTC)
+  const formatLocalDate = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const { weeks, monthLabels } = useMemo(() => {
-    const grouped: WeekData[] = [];
-    let currentWeek: ({ date: string; count: number; level: number } | null)[] = [];
-
-    contributionData.forEach((day, index) => {
-      const date = new Date(day.date);
-      const dayOfWeek = date.getDay();
-
-      if (dayOfWeek === 0 && currentWeek.length > 0) {
-        const weekDate = new Date(currentWeek.find(d => d)?.date || day.date);
-        grouped.push({
-          days: currentWeek,
-          year: weekDate.getFullYear(),
-          month: weekDate.getMonth(),
-        });
-        currentWeek = [];
-      }
-
-      currentWeek[dayOfWeek] = day;
-
-      if (index === contributionData.length - 1 && currentWeek.length > 0) {
-        const weekDate = new Date(currentWeek.find(d => d)?.date || day.date);
-        grouped.push({
-          days: currentWeek,
-          year: weekDate.getFullYear(),
-          month: weekDate.getMonth(),
-        });
-      }
+    // Aggregate contribution data by date (backend returns one entry per date+IDE)
+    const dateTotals = new Map<string, number>();
+    contributionData.forEach((day) => {
+      const existing = dateTotals.get(day.date) || 0;
+      dateTotals.set(day.date, existing + day.count);
     });
 
+    // Calculate max count for level thresholds
+    const maxCount = Math.max(...Array.from(dateTotals.values()), 0);
+    const threshold = Math.max(maxCount / 4, 1);
+
+    // Create final data map with recalculated levels
+    const dataMap = new Map<string, { date: string; count: number; level: number }>();
+    dateTotals.forEach((count, date) => {
+      const level = count === 0 ? 0 : Math.min(4, Math.ceil(count / threshold));
+      dataMap.set(date, { date, count, level });
+    });
+
+    // Generate all dates for the full year calendar (always, even if no data)
+    const today = new Date();
+    const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const startDate = new Date(endDate);
+    startDate.setFullYear(startDate.getFullYear() - 1);
+
+    // Adjust start date to be a Sunday (beginning of the first week)
+    const startDayOfWeek = startDate.getDay();
+    startDate.setDate(startDate.getDate() - startDayOfWeek);
+
+    const allDays: { date: string; count: number; level: number }[] = [];
+    const current = new Date(startDate);
+
+    while (current <= endDate) {
+      const dateStr = formatLocalDate(current);
+      const data = dataMap.get(dateStr);
+      allDays.push(data || { date: dateStr, count: 0, level: 0 });
+      current.setDate(current.getDate() + 1);
+    }
+
+    // Group days into weeks (each week is a column)
+    const grouped: WeekData[] = [];
+    for (let i = 0; i < allDays.length; i += 7) {
+      const weekDays = allDays.slice(i, i + 7);
+      // Ensure we have exactly 7 days (pad if needed)
+      while (weekDays.length < 7) {
+        const lastDate = weekDays.length > 0 ? weekDays[weekDays.length - 1].date : formatLocalDate(endDate);
+        const nextDate = new Date(lastDate + 'T00:00:00');
+        nextDate.setDate(nextDate.getDate() + 1);
+        weekDays.push({ date: formatLocalDate(nextDate), count: 0, level: 0 });
+      }
+      grouped.push({
+        days: weekDays,
+        year: new Date(weekDays[0].date + 'T00:00:00').getFullYear(),
+        month: new Date(weekDays[0].date + 'T00:00:00').getMonth(),
+      });
+    }
+
+    // Generate month labels
     const labels: { month: string; position: number }[] = [];
     let lastMonth = -1;
     let lastYear = -1;
 
     grouped.forEach((week, index) => {
-      const firstDayOfWeek = week.days.find(d => d);
-      if (!firstDayOfWeek) return;
+      const firstDay = week.days[0];
+      if (!firstDay) return;
 
-      const date = new Date(firstDayOfWeek.date);
+      const date = new Date(firstDay.date + 'T00:00:00');
       const month = date.getMonth();
       const year = date.getFullYear();
 
@@ -97,13 +133,7 @@ export function ActivityGraph() {
     );
   }
 
-  if (weeks.length === 0) {
-    return (
-      <div className="flex-1 bg-industrial-800 p-5 flex items-center justify-center">
-        <p className="font-mono text-industrial-400">No activity data available</p>
-      </div>
-    );
-  }
+  // Don't show "no data" message - calendar grid should always be visible
 
   return (
     <div className="flex-1 bg-industrial-800 p-5 flex flex-col gap-5">
