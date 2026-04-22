@@ -1,0 +1,607 @@
+# Instincts generated from https://github.com/SkarnerV/token-tracker
+# Generated: 2026-04-16T07:15:15.822Z
+# Version: 2.0
+# NOTE: This file supplements (does not replace) any existing curated instincts.
+# High-confidence manually curated instincts should be preserved alongside these.
+
+---
+id: token-tracker-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/SkarnerV/token-tracker
+---
+
+# Token Tracker Commit Length
+
+## Action
+
+Keep commit messages concise (~48 characters)
+
+## Evidence
+
+- Average commit message length: 48 chars
+- Based on 32 commits
+
+---
+id: token-tracker-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/SkarnerV/token-tracker
+---
+
+# Token Tracker Naming Files
+
+## Action
+
+Use camelCase naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: camelCase
+
+---
+id: token-tracker-import-relative
+trigger: "when importing modules"
+confidence: 0.75
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/SkarnerV/token-tracker
+---
+
+# Token Tracker Import Relative
+
+## Action
+
+Use relative imports for project files
+
+## Evidence
+
+- Import analysis shows relative import pattern
+- Example: import { x } from '../lib/x'
+
+---
+id: token-tracker-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/SkarnerV/token-tracker
+---
+
+# Token Tracker Export Style
+
+## Action
+
+Prefer mixed exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: mixed
+
+---
+id: token-tracker-arch-type-based
+trigger: "when adding new code"
+confidence: 0.8
+domain: architecture
+source: repo-analysis
+source_repo: https://github.com/SkarnerV/token-tracker
+---
+
+# Token Tracker Arch Type Based
+
+## Action
+
+Place code in the appropriate type folder (components/, services/, utils/, etc.)
+
+## Evidence
+
+- Type-based module organization detected
+- Folders: components, lib, stores, test, types
+
+---
+id: token-tracker-test-colocate
+trigger: "when writing tests"
+confidence: 0.85
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/SkarnerV/token-tracker
+---
+
+# Token Tracker Test Colocate
+
+## Action
+
+Place test file next to the source file (e.g., Button.test.tsx next to Button.tsx)
+
+## Evidence
+
+- Colocated test pattern detected
+- Tests live alongside source files
+
+---
+id: token-tracker-workflow-feature-development
+trigger: "when implementing a new feature"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/SkarnerV/token-tracker
+---
+
+# Token Tracker Workflow Feature Development
+
+## Action
+
+Follow the feature-development workflow:
+1. Add feature implementation
+2. Add tests for feature
+3. Update documentation
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~15x per month
+- Files: src/test/*, /*, src/stores/*
+
+---
+id: token-tracker-workflow-ci-cd-pipeline-update
+trigger: "when doing ci cd pipeline update"
+confidence: 0.7
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/SkarnerV/token-tracker
+---
+
+# Token Tracker Workflow Ci Cd Pipeline Update
+
+## Action
+
+Follow the ci-cd-pipeline-update workflow:
+1. Edit .github/workflows/ci.yml and/or .github/workflows/release.yml to add or fix jobs, dependencies, or steps.
+2. Optionally update related configuration files (e.g., package.json, pnpm-lock.yaml) if needed for the pipeline.
+3. Commit with a message referencing CI, release, or workflow.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~4x per month
+- Files: .github/workflows/ci.yml, .github/workflows/release.yml
+
+---
+id: token-tracker-workflow-tauri-version-or-config-upgrade
+trigger: "when doing tauri version or config upgrade"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/SkarnerV/token-tracker
+---
+
+# Token Tracker Workflow Tauri Version Or Config Upgrade
+
+## Action
+
+Follow the tauri-version-or-config-upgrade workflow:
+1. Update src-tauri/Cargo.toml to change Tauri version.
+2. Update src-tauri/tauri.conf.json for new config format or settings.
+3. Update package.json and pnpm-lock.yaml for @tauri-apps dependencies.
+4. Optionally update src-tauri/Cargo.lock and related Rust files.
+5. Update CI/CD workflows if new dependencies or build steps are needed.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: src-tauri/Cargo.toml, src-tauri/tauri.conf.json, package.json
+
+---
+id: token-tracker-workflow-parser-or-backend-feature-update
+trigger: "when doing parser or backend feature update"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/SkarnerV/token-tracker
+---
+
+# Token Tracker Workflow Parser Or Backend Feature Update
+
+## Action
+
+Follow the parser-or-backend-feature-update workflow:
+1. Edit or add Rust source files in src-tauri/src/parsers/ (e.g., claude.rs, opencode.rs, roo.rs) or src-tauri/src/database.rs.
+2. Optionally update src-tauri/src/commands.rs to expose new or changed functionality.
+3. Commit with a message referencing parser, backend, or database.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: src-tauri/src/parsers/claude.rs, src-tauri/src/parsers/opencode.rs, src-tauri/src/parsers/roo.rs
+
+---
+id: token-tracker-workflow-version-bump-and-release-prep
+trigger: "when doing version bump and release prep"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/SkarnerV/token-tracker
+---
+
+# Token Tracker Workflow Version Bump And Release Prep
+
+## Action
+
+Follow the version-bump-and-release-prep workflow:
+1. Update version in package.json.
+2. Update version in src-tauri/Cargo.toml.
+3. Update version in src-tauri/tauri.conf.json.
+4. Optionally update or run release scripts in scripts/.
+5. Commit with a message referencing version bump or release.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: package.json, src-tauri/Cargo.toml, src-tauri/tauri.conf.json
+
+---
+id: token-tracker-workflow-documentation-update
+trigger: "when doing documentation update"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/SkarnerV/token-tracker
+---
+
+# Token Tracker Workflow Documentation Update
+
+## Action
+
+Follow the documentation-update workflow:
+1. Edit or add Markdown files in docs/ or root (e.g., README.md, AGENTS.md, docs/release-pipeline-debugging.md).
+2. Commit with a message referencing docs or documentation.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: README.md, AGENTS.md, docs/release-pipeline-debugging.md
+
+---
+id: token-tracker-instinct-file-naming-camelCase
+trigger: "When creating or renaming source files"
+confidence: 0.85
+domain: code-style
+source: repo-analysis
+source_repo: SkarnerV/token-tracker
+---
+
+# Token Tracker Instinct File Naming CamelCase
+
+## Action
+
+Use camelCase for file names
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.files
+- Consistent with src/components/ActivityGraph.tsx
+
+---
+id: token-tracker-instinct-function-naming-camelCase
+trigger: "When defining new functions"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: SkarnerV/token-tracker
+---
+
+# Token Tracker Instinct Function Naming CamelCase
+
+## Action
+
+Use camelCase for function names
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.functions
+
+---
+id: token-tracker-instinct-class-naming-PascalCase
+trigger: "When defining a new class"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: SkarnerV/token-tracker
+---
+
+# Token Tracker Instinct Class Naming PascalCase
+
+## Action
+
+Use PascalCase for class names
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.classes
+
+---
+id: token-tracker-instinct-constant-naming-SCREAMING_SNAKE_CASE
+trigger: "When declaring constants"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: SkarnerV/token-tracker
+---
+
+# Token Tracker Instinct Constant Naming SCREAMING_SNAKE_CASE
+
+## Action
+
+Use SCREAMING_SNAKE_CASE for constant names
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.constants
+
+---
+id: token-tracker-instinct-import-style-relative
+trigger: "When importing modules within the project"
+confidence: 0.85
+domain: code-style
+source: repo-analysis
+source_repo: SkarnerV/token-tracker
+---
+
+# Token Tracker Instinct Import Style Relative
+
+## Action
+
+Use relative import paths
+
+## Evidence
+
+- Pattern in codeStyle.importStyle
+
+---
+id: token-tracker-instinct-export-style-mixed
+trigger: "When exporting modules or functions"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: SkarnerV/token-tracker
+---
+
+# Token Tracker Instinct Export Style Mixed
+
+## Action
+
+Use both named and default exports as appropriate
+
+## Evidence
+
+- Pattern in codeStyle.exportStyle
+
+---
+id: token-tracker-instinct-test-colocation
+trigger: "When adding tests for a module"
+confidence: 0.88
+domain: testing
+source: repo-analysis
+source_repo: SkarnerV/token-tracker
+---
+
+# Token Tracker Instinct Test Colocation
+
+## Action
+
+Place test files next to the modules they test (colocated)
+
+## Evidence
+
+- Pattern in architecture.folderStructure.testLocation
+- Files like src/components/ActivityGraph.test.tsx
+
+---
+id: token-tracker-instinct-test-naming
+trigger: "When naming test files"
+confidence: 0.9
+domain: testing
+source: repo-analysis
+source_repo: SkarnerV/token-tracker
+---
+
+# Token Tracker Instinct Test Naming
+
+## Action
+
+Use the pattern *.test.* for test files
+
+## Evidence
+
+- Pattern in workflows.feature-development.filesInvolved
+- Files like src/components/ActivityGraph.test.tsx
+
+---
+id: token-tracker-instinct-test-sequence
+trigger: "When implementing a new feature"
+confidence: 0.85
+domain: testing
+source: repo-analysis
+source_repo: SkarnerV/token-tracker
+---
+
+# Token Tracker Instinct Test Sequence
+
+## Action
+
+Add tests for the feature immediately after implementation
+
+## Evidence
+
+- workflows.feature-development.commitSequence
+- Example: Add feature implementation → Add tests for feature
+
+---
+id: token-tracker-instinct-git-commit-prefix
+trigger: "When making a commit"
+confidence: 0.9
+domain: git
+source: repo-analysis
+source_repo: SkarnerV/token-tracker
+---
+
+# Token Tracker Instinct Git Commit Prefix
+
+## Action
+
+Prefix commit messages with one of: docs, chore, fix, or a descriptive verb
+
+## Evidence
+
+- Pattern in commits.prefixes
+- Examples: docs: fix version reference, chore: bump version
+
+---
+id: token-tracker-instinct-git-commit-length
+trigger: "When writing a commit message"
+confidence: 0.8
+domain: git
+source: repo-analysis
+source_repo: SkarnerV/token-tracker
+---
+
+# Token Tracker Instinct Git Commit Length
+
+## Action
+
+Keep commit messages concise (around 48 characters on average)
+
+## Evidence
+
+- Pattern in commits.averageLength
+- Examples in commits.examples
+
+---
+id: token-tracker-instinct-git-commit-feature-sequence
+trigger: "When developing a feature"
+confidence: 0.85
+domain: git
+source: repo-analysis
+source_repo: SkarnerV/token-tracker
+---
+
+# Token Tracker Instinct Git Commit Feature Sequence
+
+## Action
+
+Follow the sequence: implement feature → add tests → update documentation
+
+## Evidence
+
+- workflows.feature-development.commitSequence
+
+---
+id: token-tracker-instinct-workflow-ci-cd-pipeline-update
+trigger: "When updating or fixing CI/CD automation"
+confidence: 0.95
+domain: workflow
+source: repo-analysis
+source_repo: SkarnerV/token-tracker
+---
+
+# Token Tracker Instinct Workflow Ci Cd Pipeline Update
+
+## Action
+
+Edit .github/workflows/ci.yml and/or .github/workflows/release.yml, optionally update related config files, and commit with a CI/release/workflow message
+
+## Evidence
+
+- WORKFLOWS.ci-cd-pipeline-update
+- Example commits referencing CI, release, or workflow
+
+---
+id: token-tracker-instinct-workflow-tauri-version-or-config-upgrade
+trigger: "When upgrading Tauri or changing its configuration"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: SkarnerV/token-tracker
+---
+
+# Token Tracker Instinct Workflow Tauri Version Or Config Upgrade
+
+## Action
+
+Update src-tauri/Cargo.toml, src-tauri/tauri.conf.json, package.json, pnpm-lock.yaml, and CI/CD workflows as needed; commit referencing Tauri or config
+
+## Evidence
+
+- WORKFLOWS.tauri-version-or-config-upgrade
+- Example commit sequences
+
+---
+id: token-tracker-instinct-workflow-parser-or-backend-feature-update
+trigger: "When adding or fixing backend logic (parsers, database)"
+confidence: 0.88
+domain: workflow
+source: repo-analysis
+source_repo: SkarnerV/token-tracker
+---
+
+# Token Tracker Instinct Workflow Parser Or Backend Feature Update
+
+## Action
+
+Edit/add Rust files in src-tauri/src/parsers/ or src-tauri/src/database.rs, optionally update src-tauri/src/commands.rs, and commit referencing parser/backend/database
+
+## Evidence
+
+- WORKFLOWS.parser-or-backend-feature-update
+- Example commit sequences
+
+---
+id: token-tracker-instinct-workflow-version-bump-and-release-prep
+trigger: "When preparing for a new release"
+confidence: 0.92
+domain: workflow
+source: repo-analysis
+source_repo: SkarnerV/token-tracker
+---
+
+# Token Tracker Instinct Workflow Version Bump And Release Prep
+
+## Action
+
+Update version in package.json, src-tauri/Cargo.toml, src-tauri/tauri.conf.json, optionally update/run release scripts, and commit referencing version bump or release
+
+## Evidence
+
+- WORKFLOWS.version-bump-and-release-prep
+- Example commit sequences
+
+---
+id: token-tracker-instinct-workflow-documentation-update
+trigger: "When documenting features, fixes, or processes"
+confidence: 0.85
+domain: workflow
+source: repo-analysis
+source_repo: SkarnerV/token-tracker
+---
+
+# Token Tracker Instinct Workflow Documentation Update
+
+## Action
+
+Edit/add Markdown files in docs/ or root (README.md, AGENTS.md, docs/release-pipeline-debugging.md) and commit referencing docs or documentation
+
+## Evidence
+
+- WORKFLOWS.documentation-update
+- Example commit sequences
+
